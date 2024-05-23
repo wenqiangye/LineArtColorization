@@ -44,5 +44,6 @@ private:
     QImage sketch_image;
     QImage scrible_image;
     QImage current_ref_image;
+    QImage gen_image;
 };
 #endif // MAINWINDOW_H

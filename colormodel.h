@@ -9,6 +9,11 @@
 #include "modelbase.h"
 #include "Loger.h"
 #include <onnxruntime_cxx_api.h>
+#include <onnxruntime_c_api.h>
+#include <cpu_provider_factory.h>
+#include <provider_options.h>
+#include <onnxruntime_lite_custom_op.h>
+#include <onnxruntime_run_options_config_keys.h>
 #include <string>
 #include <QString>
 #include <QImage>
@@ -23,44 +28,91 @@
 using namespace Ort;
 namespace COLORMODEL
 {
-    class ColorModel: public ModelBase
+    class ColorModel
     {
     public:
-        explicit ColorModel();
-        ColorModel(const std::string &_model_path, const std::string &_model_name);
-        virtual ~ColorModel();
-        virtual void runmodel(const QImage &sketch_image, const QImage &ref_image);
-        virtual void runmodel() override;
-        bool CheckStatus(const OrtApi *g_ort, OrtStatus *status);
-        cv::Mat QImage2Mat(const QImage &img);
+        explicit ColorModel(const std::string  &model_path) : model_path_(model_path)
+        {
+            Initialize();
+        }
+        ColorModel()
+        {
+            Initialize();
+        }
+        ~ColorModel()
+        {
+            delete session_;
+        }
+        void QImage2Mat(const QImage &img, std::vector<float> &tensor_values, const int &channels_cnt );
+        void Initialize()
+        {
+            env_ = Ort::Env(ORT_LOGGING_LEVEL_WARNING, "ColorModel");
+            session_ = new Ort::Session(env_, model_path_.c_str(), session_options_);
+            // 获取输入数量和输出数量
+            size_t input_count = session_->GetInputCount();
+            size_t output_count = session_->GetOutputCount();
+
+            std::cout << "Input Count: " << input_count << std::endl;
+            std::cout << "Output Count: " << output_count << std::endl;
+
+            // 遍历输入和输出
+            for (size_t i = 0; i < input_count; ++i)
+            {
+                Ort::TypeInfo type_info = session_->GetInputTypeInfo(i);
+                // const Ort::TensorTypeAndShapeInfo tensor_info = type_info.GetTensorTypeAndShapeInfo();
+                std::vector<int64_t> input_shape = type_info.GetTensorTypeAndShapeInfo().GetShape();
+
+                std::cout << "Input " << i << " Shape: ";
+                for (size_t j = 0; j < input_shape.size(); ++j)
+                {
+                    std::cout << input_shape[j] << " ";
+                    if(i == 0)
+                    {
+                        input_sketch_shape.push_back(input_shape[j]);
+                    }
+                    else
+                    {
+                        input_ref_shape.push_back(input_shape[j]);
+                    }
+                }
+                std::cout << std::endl;
+            }
+
+            for (size_t i = 0; i < output_count; ++i)
+            {
+                Ort::TypeInfo type_info = session_->GetOutputTypeInfo(i);
+                std::vector<int64_t> output_shape = type_info.GetTensorTypeAndShapeInfo().GetShape();
+
+                std::cout << "Output " << i << " Shape: ";
+                for (size_t j = 0; j < output_shape.size(); ++j)
+                {
+                    std::cout << output_shape[j] << " ";
+                    if(i == 0)
+                    {
+                        output_ref_shape.push_back(output_shape[j]);
+                    }
+                    else
+                    {
+                        output_sketch_shape.push_back(output_shape[j]);
+                    }
+                }
+                std::cout << std::endl;
+            }
+        }
+        void RunModel(const QImage &sketch_image, const QImage &ref_image, QImage &gen_image);
+        void MatToQImage(const cv::Mat &mat, QImage &gen_image);
     private:
         std::string model_name = "reference_based.onnx";
-        std::string model_path = "/home/yesky/code/QT_Projects/MultiGuideLineArtColorization/line_art_model/reference_based.onnx";
-        const OrtApi *g_ort = NULL;
-        const OrtApiBase *ptr_api_base;
-        OrtEnv *env;
-        OrtSessionOptions *session_options;
+        std::string model_path_ = "/home/yesky/code/QT_Projects/MultiGuideLineArtColorization/line_art_model/reference_based.onnx";
+        Ort::SessionOptions session_options_;
+        Ort::Env  env_;
+        Ort::Session *session_;
 
-        //CUDA option set
-        OrtCUDAProviderOptions cuda_option;
-        OrtSession *session;
-        OrtAllocator *allocator;
+        std::vector<int64_t> input_sketch_shape;
+        std::vector<int64_t> input_ref_shape;
 
-        //**********输入信息**********//
-        size_t num_input_nodes; //输入节点的数量
-
-        std::vector<const char *> input_node_names; //输入节点的名称
-        std::vector<std::vector<int64_t>> input_node_dims; //输入节点的维度
-        std::vector<ONNXTensorElementDataType> input_types; //输入节点的类型
-        std::vector<OrtValue *> input_tensors; //输入节点的tensor
-
-        //***********输出信息****************//
-
-        size_t num_output_nodes;
-        std::vector<const char *> output_node_names;
-        std::vector<std::vector<int64_t>> output_node_dims;
-        std::vector<OrtValue *> output_tensors;
-
+        std::vector<int64_t> output_sketch_shape;
+        std::vector<int64_t> output_ref_shape;
         cv::Mat mat_sketch_image;
         cv::Mat mat_ref_image;
     };

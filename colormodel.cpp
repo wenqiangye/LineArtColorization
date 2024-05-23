@@ -6,156 +6,16 @@
 
 #include "colormodel.h"
 
-COLORMODEL::ColorModel::ColorModel()
-{
-    ptr_api_base = OrtGetApiBase();
-    g_ort = ptr_api_base->GetApi(ORT_API_VERSION);
-    CheckStatus(g_ort, g_ort->CreateEnv(ORT_LOGGING_LEVEL_WARNING, "test", &this->env));
 
-    CheckStatus(g_ort, g_ort->CreateSessionOptions(&this->session_options));
-    CheckStatus(g_ort, g_ort->SetIntraOpNumThreads(this->session_options, 1));
-    CheckStatus(g_ort, g_ort->SetSessionGraphOptimizationLevel(this->session_options, ORT_ENABLE_BASIC));
-
-    this->cuda_option.device_id = 0;
-    this->cuda_option.arena_extend_strategy = 0;
-    this->cuda_option.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchExhaustive;
-    this->cuda_option.gpu_mem_limit = SIZE_MAX;
-    this->cuda_option.do_copy_in_default_stream = 1;
-
-    //CUDA 加速
-    CheckStatus(g_ort, g_ort->SessionOptionsAppendExecutionProvider_CUDA(this->session_options, &this->cuda_option));
-
-    //load  model and creat session
-    printf("Using Onnxruntime C++ API\n");
-
-    CheckStatus(g_ort, g_ort->CreateSession(this->env, this->model_path.c_str(), this->session_options, &this->session));
-    CheckStatus(g_ort, g_ort->GetAllocatorWithDefaultOptions(&this->allocator));
-    CheckStatus(g_ort, g_ort->SessionGetInputCount(this->session, &this->num_input_nodes));
-
-
-    input_node_names.resize(this->num_input_nodes);
-    input_node_dims.resize(this->num_input_nodes);
-    input_types.resize(this->num_input_nodes);
-    input_tensors.resize(this->num_input_nodes);
-
-    for (size_t i = 0; i < this->num_input_nodes; i++)
-    {
-        // Get input node names
-        char *input_name;
-        CheckStatus(g_ort, g_ort->SessionGetInputName(this->session, i, this->allocator, &input_name));
-        this->input_node_names[i] = input_name;
-
-        // Get input node types
-        OrtTypeInfo *typeinfo;
-        CheckStatus(g_ort, g_ort->SessionGetInputTypeInfo(this->session, i, &typeinfo));
-        const OrtTensorTypeAndShapeInfo *tensor_info;
-        CheckStatus(g_ort, g_ort->CastTypeInfoToTensorInfo(typeinfo, &tensor_info));
-        ONNXTensorElementDataType type;
-        CheckStatus(g_ort, g_ort->GetTensorElementType(tensor_info, &type));
-        input_types[i] = type;
-
-        // Get input shapes/dims
-        size_t num_dims;
-        CheckStatus(g_ort, g_ort->GetDimensionsCount(tensor_info, &num_dims));
-        input_node_dims[i].resize(num_dims);
-        CheckStatus(g_ort, g_ort->GetDimensions(tensor_info, input_node_dims[i].data(), num_dims));
-
-        size_t tensor_size;
-        CheckStatus(g_ort, g_ort->GetTensorShapeElementCount(tensor_info, &tensor_size));
-
-        if (typeinfo)
-        {
-            g_ort->ReleaseTypeInfo(typeinfo);
-        }
-    }
-    //---------------------------------------------------//
-
-
-    CheckStatus(g_ort, g_ort->SessionGetOutputCount(session, &num_output_nodes));
-    output_node_names.resize(num_output_nodes);
-    output_node_dims.resize(num_output_nodes);
-    output_tensors.resize(num_output_nodes);
-
-    for (size_t i = 0; i < num_output_nodes; i++)
-    {
-        // Get output node names
-        char *output_name;
-        CheckStatus(g_ort, g_ort->SessionGetOutputName(session, i, allocator, &output_name));
-        output_node_names[i] = output_name;
-
-        OrtTypeInfo *typeinfo;
-        CheckStatus(g_ort, g_ort->SessionGetOutputTypeInfo(session, i, &typeinfo));
-        const OrtTensorTypeAndShapeInfo *tensor_info;
-        CheckStatus(g_ort, g_ort->CastTypeInfoToTensorInfo(typeinfo, &tensor_info));
-
-        // Get output shapes/dims
-        size_t num_dims;
-        CheckStatus(g_ort, g_ort->GetDimensionsCount(tensor_info, &num_dims));
-        output_node_dims[i].resize(num_dims);
-        CheckStatus(g_ort, g_ort->GetDimensions(tensor_info, (int64_t *)output_node_dims[i].data(), num_dims));
-
-        size_t tensor_size;
-        CheckStatus(g_ort, g_ort->GetTensorShapeElementCount(tensor_info, &tensor_size));
-
-        if (typeinfo)
-        {
-            g_ort->ReleaseTypeInfo(typeinfo);
-        }
-    }
-    //---------------------------------------------------//
-    printf("Number of inputs = %zu\n", num_input_nodes);
-    printf("Number of output = %zu\n", num_output_nodes);
-    std::cout << "input_name:" << input_node_names[0] << std::endl;
-    std::cout << "output_name: " << output_node_names[0] << std::endl;
-
-}
-
-COLORMODEL::ColorModel::ColorModel(const std::string &_model_path, const std::string &_model_name)
-{
-
-}
-
-COLORMODEL::ColorModel::~ColorModel()
-{
-
-}
-
-void COLORMODEL::ColorModel::runmodel(const QImage &sketch_image, const QImage &ref_image)
-{
-    mat_sketch_image = QImage2Mat(sketch_image);
-    mat_ref_image = QImage2Mat(ref_image);
-    LOG_INFO(LOG_BASE::LOG_LEVEL_INFO, "cover QImage to Mat!")
-
-    //推理
-
-
-}
-
-void COLORMODEL::ColorModel::runmodel()
-{
-
-}
-
-bool COLORMODEL::ColorModel::CheckStatus(const OrtApi *g_ort, OrtStatus *status)
-{
-    if(status != nullptr)
-    {
-        const char *msg = g_ort->GetErrorMessage(status);
-        std::cerr << msg << std::endl;
-        LOG_ERROR(LOG_BASE::LOG_LEVEL_ERROR, "checkstatus error: " + std::string(msg));
-        g_ort->ReleaseStatus(status);
-        throw Ort::Exception(msg, OrtErrorCode::ORT_EP_FAIL);
-    }
-    return true;
-}
-
-cv::Mat COLORMODEL::ColorModel::QImage2Mat(const QImage &img)
+void COLORMODEL::ColorModel::QImage2Mat(const QImage &img, std::vector<float> &tensor_values, const int &channel_cnt)
 {
     cv::Mat res_mat;
     switch (img.format())
     {
         case QImage::Format_ARGB32:
         case QImage::Format_RGB32:
+            res_mat = cv::Mat(img.height(), img.width(), CV_8UC4, (void *)img.constBits(), img.bytesPerLine());
+            break;
         case QImage::Format_ARGB32_Premultiplied:
             res_mat = cv::Mat(img.height(), img.width(), CV_8UC4, (void *)img.constBits(), img.bytesPerLine());
             break;
@@ -167,5 +27,112 @@ cv::Mat COLORMODEL::ColorModel::QImage2Mat(const QImage &img)
             res_mat = cv::Mat(img.height(), img.width(), CV_8UC1, (void *)img.constBits(), img.bytesPerLine());
             break;
     }
-    return res_mat;
+
+    cv::Mat float_image, gray_image;
+    if(channel_cnt == 1)
+    {
+        cv::cvtColor(res_mat, gray_image, cv::COLOR_BGR2GRAY);
+        res_mat = gray_image;
+    }
+
+    res_mat.convertTo(float_image, CV_32F, 1.0 / 255.0);
+    // 减去均值并除以标准差 (假设均值和标准差)
+    cv::Mat mean = cv::Mat(float_image.size(), float_image.type(), cv::Scalar(0.5, 0.5, 0.5));
+    cv::Mat std = cv::Mat(float_image.size(), float_image.type(), cv::Scalar(0.5, 0.5, 0.5));
+    if(channel_cnt == 1)
+    {
+        mean = cv::Mat(float_image.size(), float_image.type(), cv::Scalar(0.5));
+        std = cv::Mat(float_image.size(), float_image.type(), cv::Scalar(0.5));
+    }
+
+    cv::Mat normalized_image = (float_image - mean) / std;
+    std::vector<cv::Mat>channels(channel_cnt);
+    cv::split(normalized_image, channels);
+    for(int c = 0; c < channel_cnt; ++c)
+    {
+        tensor_values.insert(tensor_values.end(), (float *)channels[c].datastart, (float *)channels[c].dataend);
+    }
+    // size_t tensors_size = normalized_image.channels() * normalized_image.total();
+    // std::vector<float> input_tensor_values(tensors_size);
+    // std::memcpy(input_tensor_values.data(), normalized_image.data, tensors_size * sizeof(float));
+    // tensor_values.swap(input_tensor_values);
 }
+
+void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &ref_image, QImage  &gen_image)
+{
+    if(sketch_image.isNull())
+    {
+        std::cout << "sketch_image is null" << std::endl;
+        return;
+    }
+    std::vector<float> sketch_tensors;
+    QImage2Mat(sketch_image, sketch_tensors, 1);
+
+    std::cout << "sketch_tensors num " << sketch_tensors.size() << std::endl;
+    if(ref_image.isNull())
+    {
+        std::cout << "ref_image is null" << std::endl;
+        return;
+    }
+    std::vector<float> ref_tensors;
+    QImage2Mat(ref_image, ref_tensors, 3);
+    std::cout << "ref_tensors num " << ref_tensors.size() << std::endl;
+
+    const char *input_node_names[] = {"sketch", "reference"};
+    const char *output_node_names[] = {"output"};
+    Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+    // Ort::Value input_sketch_tensor = ;
+    // Ort::Value input_ref_tensor = ;
+
+    std::vector<Ort::Value> inputs_tensors;
+    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, sketch_tensors.data(), sketch_tensors.size(), input_sketch_shape.data(), input_sketch_shape.size()));
+    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, ref_tensors.data(), ref_tensors.size(), input_ref_shape.data(), input_ref_shape.size()));
+    auto output_tensors = session_->Run(Ort::RunOptions{nullptr}, input_node_names, inputs_tensors.data(), inputs_tensors.size(), output_node_names, 1);
+
+    std::vector<int64_t>  output_shape = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
+    int batch_size = output_shape[0];
+    int channels = output_shape[1];
+    int height = output_shape[2];
+    int width = output_shape[3];
+
+    std::cout << batch_size << ' ' << channels << ' ' << height << ' ' << width << std::endl;
+    // 获取输出张量的数据
+    float *output_data = output_tensors[0].GetTensorMutableData<float>();
+    // 创建 cv::Mat 并将数据复制到 Mat
+    // for(int i = 0; output_data[i] >= 0.0; i++)
+    // {
+    //     std::cout << output_data[i] << std::endl;
+    // }
+    cv::Mat output_image(height, width, CV_32FC(channels), output_data);
+
+    // 转换为 8 位无符号整数
+    output_image.convertTo(output_image, CV_8UC3, 255.0);
+    MatToQImage(output_image, gen_image);
+    // cv::imshow("result", output_image);
+}
+
+void COLORMODEL::ColorModel::MatToQImage(const cv::Mat &mat, QImage &gen_image)
+{
+    // 检查图像类型
+    switch (mat.type())
+    {
+        case CV_8UC1:   // 灰度图像
+            {
+                gen_image = QImage(mat.data, mat.cols, mat.rows, static_cast<int>(mat.step), QImage::Format_Grayscale8);
+                return;
+            }
+        case CV_8UC3:   // 彩色图像
+            {
+                gen_image = QImage(mat.data, mat.cols, mat.rows, static_cast<int>(mat.step), QImage::Format_RGB888);
+                return;
+            }
+        case CV_8UC4:   // 带有 alpha 通道的彩色图像
+            {
+                gen_image = QImage(mat.data, mat.cols, mat.rows, static_cast<int>(mat.step), QImage::Format_ARGB32);
+                return;
+            }
+        default:
+            throw std::runtime_error("Unsupported cv::Mat format for QImage conversion");
+    }
+}
+

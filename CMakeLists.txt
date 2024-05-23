@@ -60,14 +60,16 @@ endif()
 target_link_libraries(MultiGuideLineArtColorization PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 # opencv
 find_package(OpenCV REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS})
-
-# onnxruntime
 set(ONNXRUNTIME_ROOT_PATH /home/yesky/onnxruntime-linux-x64-gpu-1.17.3)
-set(ONNXRUNTIME_INCLUDE_DIRS ${ONNXRUNTIME_ROOT_PATH}/include/)
+include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${ONNXRUNTIME_ROOT_PATH}/include)
+link_libraries(${ONNXRUNTIME_ROOT_PATH}/lib)
+# onnxruntime
+
+# set(ONNXRUNTIME_INCLUDE_DIRS ${ONNXRUNTIME_ROOT_PATH}/include/)
 set(ONNXRUNTIME_LIB ${ONNXRUNTIME_ROOT_PATH}/lib/libonnxruntime.so)
-include_directories(${ONNXRUNTIME_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE "${ONNXRUNTIME_ROOT_PATH}/lib/libonnxruntime.so")
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS} "${ONNXRUNTIME_ROOT_PATH}/lib/libonnxruntime.so")
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

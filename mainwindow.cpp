@@ -77,6 +77,10 @@ void MainWindow::on_gen_image_pushButton_clicked()
         return;
     }
 
-    pRef_based_model.get()->runmodel(sketch_image, current_ref_image);
+    pRef_based_model.get()->RunModel(sketch_image, current_ref_image, gen_image);
+    if(gen_image.isNull() == false)
+    {
+        ui->gen_label->setPixmap(QPixmap::fromImage(gen_image));
+    }
 }
 
