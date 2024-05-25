@@ -9,10 +9,14 @@
 
 void COLORMODEL::ColorModel::QImage2Mat(const QImage &img, std::vector<float> &tensor_values, const int &channel_cnt)
 {
+    // std::cout << img.format() << ' ' << QImage::Format_Grayscale8 << std::endl;
     cv::Mat res_mat;
     switch (img.format())
     {
         case QImage::Format_ARGB32:
+        case QImage::Format_Grayscale8:
+            res_mat =  cv::Mat(img.height(), img.width(), CV_8UC1, (void *)img.constBits(), img.bytesPerLine());
+            break;
         case QImage::Format_RGB32:
             res_mat = cv::Mat(img.height(), img.width(), CV_8UC4, (void *)img.constBits(), img.bytesPerLine());
             break;
@@ -29,7 +33,8 @@ void COLORMODEL::ColorModel::QImage2Mat(const QImage &img, std::vector<float> &t
     }
 
     cv::Mat float_image, gray_image;
-    if(channel_cnt == 1)
+    // if img not gray image do cvtColor
+    if(channel_cnt == 1 && img.format() != QImage::Format_Grayscale8)
     {
         cv::cvtColor(res_mat, gray_image, cv::COLOR_BGR2GRAY);
         res_mat = gray_image;
@@ -37,25 +42,29 @@ void COLORMODEL::ColorModel::QImage2Mat(const QImage &img, std::vector<float> &t
 
     res_mat.convertTo(float_image, CV_32F, 1.0 / 255.0);
     // 减去均值并除以标准差 (假设均值和标准差)
-    cv::Mat mean = cv::Mat(float_image.size(), float_image.type(), cv::Scalar(0.5, 0.5, 0.5));
-    cv::Mat std = cv::Mat(float_image.size(), float_image.type(), cv::Scalar(0.5, 0.5, 0.5));
+    cv::Mat normalized_image;
     if(channel_cnt == 1)
     {
-        mean = cv::Mat(float_image.size(), float_image.type(), cv::Scalar(0.5));
-        std = cv::Mat(float_image.size(), float_image.type(), cv::Scalar(0.5));
+        normalized_image = (float_image - 0.5) / 0.5;
+    }
+    else
+    {
+        std::vector<cv::Mat>channels(channel_cnt);
+        cv::split(float_image, channels);
+        for(int i = 0; i < channel_cnt; ++i)
+        {
+            channels[i] = (channels[i] - 0.5) / 0.5;
+        }
+        cv::merge(channels, normalized_image);
     }
 
-    cv::Mat normalized_image = (float_image - mean) / std;
-    std::vector<cv::Mat>channels(channel_cnt);
-    cv::split(normalized_image, channels);
+    std::vector<cv::Mat>chw_image;
+    cv::split(normalized_image, chw_image);
+
     for(int c = 0; c < channel_cnt; ++c)
     {
-        tensor_values.insert(tensor_values.end(), (float *)channels[c].datastart, (float *)channels[c].dataend);
+        tensor_values.insert(tensor_values.end(), (float *)chw_image[c].datastart, (float *)chw_image[c].dataend);
     }
-    // size_t tensors_size = normalized_image.channels() * normalized_image.total();
-    // std::vector<float> input_tensor_values(tensors_size);
-    // std::memcpy(input_tensor_values.data(), normalized_image.data, tensors_size * sizeof(float));
-    // tensor_values.swap(input_tensor_values);
 }
 
 void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &ref_image, QImage  &gen_image)
@@ -86,6 +95,7 @@ void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &
 
     std::vector<Ort::Value> inputs_tensors;
     inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, sketch_tensors.data(), sketch_tensors.size(), input_sketch_shape.data(), input_sketch_shape.size()));
+    memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
     inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, ref_tensors.data(), ref_tensors.size(), input_ref_shape.data(), input_ref_shape.size()));
     auto output_tensors = session_->Run(Ort::RunOptions{nullptr}, input_node_names, inputs_tensors.data(), inputs_tensors.size(), output_node_names, 1);
 
@@ -98,17 +108,20 @@ void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &
     std::cout << batch_size << ' ' << channels << ' ' << height << ' ' << width << std::endl;
     // 获取输出张量的数据
     float *output_data = output_tensors[0].GetTensorMutableData<float>();
-    // 创建 cv::Mat 并将数据复制到 Mat
-    // for(int i = 0; output_data[i] >= 0.0; i++)
-    // {
-    //     std::cout << output_data[i] << std::endl;
-    // }
-    cv::Mat output_image(height, width, CV_32FC(channels), output_data);
+
+
+    std::vector<cv::Mat> channel_mats(channels);
+    for(int i = 0; i < channels; ++i)
+    {
+        channel_mats[i] = cv::Mat(height, width, CV_32F, output_data + i * height * width);
+    }
+
+    cv::Mat output_image;
+    cv::merge(channel_mats, output_image);
 
     // 转换为 8 位无符号整数
     output_image.convertTo(output_image, CV_8UC3, 255.0);
     MatToQImage(output_image, gen_image);
-    // cv::imshow("result", output_image);
 }
 
 void COLORMODEL::ColorModel::MatToQImage(const cv::Mat &mat, QImage &gen_image)
@@ -118,16 +131,19 @@ void COLORMODEL::ColorModel::MatToQImage(const cv::Mat &mat, QImage &gen_image)
     {
         case CV_8UC1:   // 灰度图像
             {
+                // std::cout << "gray" << std::endl;
                 gen_image = QImage(mat.data, mat.cols, mat.rows, static_cast<int>(mat.step), QImage::Format_Grayscale8);
                 return;
             }
         case CV_8UC3:   // 彩色图像
             {
-                gen_image = QImage(mat.data, mat.cols, mat.rows, static_cast<int>(mat.step), QImage::Format_RGB888);
+                // std::cout << "color" << std::endl;
+                gen_image = QImage(mat.data, mat.cols, mat.rows, static_cast<int>(mat.step), QImage::Format_BGR888);
                 return;
             }
         case CV_8UC4:   // 带有 alpha 通道的彩色图像
             {
+                // std::cout << "alpha color" << std::endl;
                 gen_image = QImage(mat.data, mat.cols, mat.rows, static_cast<int>(mat.step), QImage::Format_ARGB32);
                 return;
             }

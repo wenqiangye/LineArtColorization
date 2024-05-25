@@ -103,7 +103,7 @@ namespace COLORMODEL
         void MatToQImage(const cv::Mat &mat, QImage &gen_image);
     private:
         std::string model_name = "reference_based.onnx";
-        std::string model_path_ = "/home/yesky/code/QT_Projects/MultiGuideLineArtColorization/line_art_model/reference_based.onnx";
+        std::string model_path_ = "/home/yesky/PycharmProjects/MultiGuideLineArtColorization/modelonnx/MY_GEN.onnx";
         Ort::SessionOptions session_options_;
         Ort::Env  env_;
         Ort::Session *session_;
