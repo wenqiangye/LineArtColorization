@@ -11,6 +11,13 @@
 #include <QStandardItemModel>
 #include <QFileDialog>
 #include "colormodel.h"
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc_c.h>
+#include <opencv2/dnn.hpp>
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -30,20 +37,28 @@ public:
 private slots:
     // void on_pushButton_clicked();
 
-    void on_add_line_art_pushButton_clicked();
+    void onAddLineArtPushButtonClicked();
 
-    void on_add_ref_pushButton_clicked();
+    void onAddRefPushButtonClicked();
 
-    void on_gen_image_pushButton_clicked();
+    void onGenImagePushButtonClicked();
+
+    void onAddScriblePushButtonClicked();
+
+    void onSaveGenImageClicked();
 
 private:
     Ui::MainWindow *ui;
-    std::unique_ptr<QStandardItemModel> pRef_image_model;
-    std::vector<QImage> ref_images;
-    std::unique_ptr<COLORMODEL::ColorModel> pRef_based_model;
-    QImage sketch_image;
-    QImage scrible_image;
-    QImage current_ref_image;
-    QImage gen_image;
+    std::unique_ptr<QStandardItemModel> pRefImageModel;
+    std::vector<QImage> refImages;
+    std::unique_ptr<COLORMODEL::ColorModel> pRefBasedModel;
+    QImage sketchImage;
+    QImage scribleImage;
+    QImage currentRefImage;
+    QImage genImage;
+    cv::Mat sketchImageMat;
+    cv::Mat scribleImageMat;
+    cv::Mat currentRefImageMat;
+    cv::Mat genImageMat;
 };
 #endif // MAINWINDOW_H

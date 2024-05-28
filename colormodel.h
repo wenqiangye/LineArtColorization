@@ -43,7 +43,7 @@ namespace COLORMODEL
         {
             delete session_;
         }
-        void QImage2Mat(const QImage &img, std::vector<float> &tensor_values, const int &channels_cnt );
+        void getImgTensors(const QImage &img, std::vector<float> &tensor_values, const int &channels_cnt );
         void Initialize()
         {
             env_ = Ort::Env(ORT_LOGGING_LEVEL_WARNING, "ColorModel");
@@ -100,7 +100,9 @@ namespace COLORMODEL
             }
         }
         void RunModel(const QImage &sketch_image, const QImage &ref_image, QImage &gen_image);
-        void MatToQImage(const cv::Mat &mat, QImage &gen_image);
+        void RunModel(const QImage &sketch_image, const QImage &ref_image, QImage &gen_image, cv::Mat &sketch_image_mat, cv::Mat &current_ref_image_mat);
+        // void MatToQImage(const cv::Mat &mat, QImage &gen_image);
+        void GetMatTensor(const cv::Mat &img, std::vector<float> &tensor_values, const int &channel_cnt);
     private:
         std::string model_name = "reference_based.onnx";
         std::string model_path_ = "/home/yesky/PycharmProjects/MultiGuideLineArtColorization/modelonnx/MY_GEN.onnx";

@@ -15,13 +15,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->listView->setIconSize(QSize(256, 256));
     ui->lineartwidget->setStyleSheet(QString::fromUtf8("#lineartwidget{border:2px solid white}"));
-    if(pRef_based_model.get() == nullptr)
+    if(pRefBasedModel.get() == nullptr)
     {
-        pRef_based_model = std::make_unique<COLORMODEL::ColorModel>();
+        pRefBasedModel = std::make_unique<COLORMODEL::ColorModel>();
     }
 
-    connect(ui->actionAdd_LineArt, SIGNAL(triggered()), this, SLOT(on_add_line_art_pushButton_clicked()));
-    connect(ui->actionAdd_reference, SIGNAL(triggered()), this, SLOT(on_add_ref_pushButton_clicked()));
+    connect(ui->actionAdd_LineArt, SIGNAL(triggered()), this, SLOT(onAddLineArtPushButtonClicked()));
+    connect(ui->actionAdd_reference, SIGNAL(triggered()), this, SLOT(onAddRefPushButtonClicked()));
+    connect(ui->actionAdd_Scribble, SIGNAL(triggered()), this, SLOT(onAddScriblePushButtonClicked()));
+    connect(ui->actionSave_gen_image, SIGNAL(triggered()), this, SLOT(onSaveGenImageClicked()));
+
+    connect(ui->add_line_art_pushButton, SIGNAL(clicked()), this, SLOT(onAddLineArtPushButtonClicked()));
+    connect(ui->add_ref_pushButton, SIGNAL(clicked()), this, SLOT(onAddRefPushButtonClicked()));
+    connect(ui->add_scrible_pushButton, SIGNAL(clicked()), this, SLOT(onAddScriblePushButtonClicked()));
+    connect(ui->gen_image_pushButton, SIGNAL(clicked()), this, SLOT(onGenImagePushButtonClicked()));
 }
 
 MainWindow::~MainWindow()
@@ -29,36 +36,38 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_add_line_art_pushButton_clicked()
+void MainWindow::onAddLineArtPushButtonClicked()
 {
     LOG_INFO(LOG_BASE::LOG_LEVEL_INFO, "add line art image button clicked!")
     QString image_path = QFileDialog::getOpenFileName(this, tr("Open Line Art Image"),
                          QCoreApplication::applicationDirPath(), tr("*.png *.jpg"));
-    if(sketch_image.load(image_path))
+    if(sketchImage.load(image_path))
     {
         LOG_INFO(LOG_BASE::LOG_LEVEL_INFO, "open sketch " + image_path.toStdString() + " image");
-        ui->sketch_label->setPixmap(QPixmap::fromImage(sketch_image));
+        ui->sketch_label->setPixmap(QPixmap::fromImage(sketchImage));
+        sketchImageMat = cv::imread(image_path.toStdString(), cv::IMREAD_COLOR);
     }
 }
 
 
-void MainWindow::on_add_ref_pushButton_clicked()
+void MainWindow::onAddRefPushButtonClicked()
 {
     LOG_INFO(LOG_BASE::LOG_LEVEL_INFO, "add ref image button clicked!")
     QString image_path = QFileDialog::getOpenFileName(this, tr("Open Reference Image"),
                          QCoreApplication::applicationDirPath(), tr("*.png *.jpg"));
-    if(pRef_image_model.get() == nullptr)
+    if(pRefImageModel.get() == nullptr)
     {
-        pRef_image_model = std::make_unique<QStandardItemModel>(this);
+        pRefImageModel = std::make_unique<QStandardItemModel>(this);
     }
-    if(current_ref_image.load(image_path))
+    if(currentRefImage.load(image_path))
     {
         LOG_INFO(LOG_BASE::LOG_LEVEL_INFO, "open ref " + image_path.toStdString() + " image");
-        ref_images.push_back(current_ref_image);
-        QPixmap ref_image_pix = QPixmap::fromImage(current_ref_image);
+        refImages.push_back(currentRefImage);
+        QPixmap ref_image_pix = QPixmap::fromImage(currentRefImage);
         QStandardItem *tmp_ref_image = new QStandardItem(QIcon(ref_image_pix), QString(""));
-        pRef_image_model.get()->appendRow(tmp_ref_image);
-        ui->listView->setModel(pRef_image_model.get());
+        pRefImageModel.get()->appendRow(tmp_ref_image);
+        ui->listView->setModel(pRefImageModel.get());
+        currentRefImageMat = cv::imread(image_path.toStdString(), cv::IMREAD_COLOR);
     }
     else
     {
@@ -67,18 +76,59 @@ void MainWindow::on_add_ref_pushButton_clicked()
 }
 
 
-void MainWindow::on_gen_image_pushButton_clicked()
+void MainWindow::onGenImagePushButtonClicked()
 {
-    if(pRef_based_model.get() == nullptr)
+    if(pRefBasedModel.get() == nullptr)
     {
         LOG_WARN(LOG_BASE::LOG_LEVEL_WARNING, "not load color model!")
         return;
     }
 
-    pRef_based_model.get()->RunModel(sketch_image, current_ref_image, gen_image);
-    if(gen_image.isNull() == false)
+    pRefBasedModel.get()->RunModel(sketchImage, currentRefImage, genImage, sketchImageMat, currentRefImageMat);
+    if(!genImage.isNull())
     {
-        ui->gen_label->setPixmap(QPixmap::fromImage(gen_image));
+        ui->gen_label->setPixmap(QPixmap::fromImage(genImage));
     }
 }
+
+
+void MainWindow::onAddScriblePushButtonClicked()
+{
+    LOG_INFO(LOG_BASE::LOG_LEVEL_INFO, "add scrible image button clicked!")
+    QString image_path = QFileDialog::getOpenFileName(this, tr("Open Scrible Image"),
+                         QCoreApplication::applicationDirPath(), tr("*.png *.jpg"));
+    if(scribleImage.load(image_path))
+    {
+        LOG_INFO(LOG_BASE::LOG_LEVEL_INFO, "open scrible " + image_path.toStdString() + " image");
+        ui->scrible_label->setPixmap(QPixmap::fromImage(scribleImage));
+        scribleImageMat = cv::imread(image_path.toStdString(), cv::IMREAD_COLOR);
+    }
+}
+
+void MainWindow::onSaveGenImageClicked()
+{
+    if(genImage.isNull())
+    {
+        return;
+    }
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save gen Image"), QCoreApplication::applicationDirPath(), tr("PNG Files (*.png);;JPG Files (*.jpg)"));
+    if(!fileName.isEmpty())
+    {
+        QFileInfo fileInfo(fileName);
+        QString suffix = fileInfo.suffix().toLower();
+        if(suffix.isEmpty())
+        {
+            fileName.append(".png");
+        }
+        else if(suffix != "png" && suffix != "jpg")
+        {
+            fileName.append(".png");
+        }
+        if(!genImage.save(fileName))
+        {
+            qWarning("Failed to save gen image.");
+        }
+    }
+}
+
 
