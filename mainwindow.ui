@@ -53,7 +53,7 @@
       <x>30</x>
       <y>20</y>
       <width>661</width>
-      <height>601</height>
+      <height>611</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout">
@@ -157,8 +157,8 @@
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_2">
-     <item row="0" column="0">
-      <widget class="QPushButton" name="add_line_art_pushButton">
+     <item row="2" column="0">
+      <widget class="QPushButton" name="gen_image_pushButton">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -166,7 +166,7 @@
         </size>
        </property>
        <property name="text">
-        <string>add line art image</string>
+        <string>gen image</string>
        </property>
       </widget>
      </item>
@@ -183,8 +183,8 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QPushButton" name="gen_image_pushButton">
+     <item row="0" column="0">
+      <widget class="QPushButton" name="add_line_art_pushButton">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -192,7 +192,7 @@
         </size>
        </property>
        <property name="text">
-        <string>gen image</string>
+        <string>add line art image</string>
        </property>
       </widget>
      </item>
@@ -208,8 +208,50 @@
      <height>27</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>文件</string>
+    </property>
+    <addaction name="actionAdd_LineArt"/>
+    <addaction name="actionAdd_Scribble"/>
+    <addaction name="actionAdd_reference"/>
+    <addaction name="actionAdd_ColorModel"/>
+    <addaction name="actionSave_gen_image"/>
+    <addaction name="actionSave_scribble"/>
+   </widget>
+   <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionAdd_LineArt">
+   <property name="text">
+    <string>Add Line Art</string>
+   </property>
+  </action>
+  <action name="actionAdd_Scribble">
+   <property name="text">
+    <string>Add Scribble</string>
+   </property>
+  </action>
+  <action name="actionAdd_reference">
+   <property name="text">
+    <string>Add reference</string>
+   </property>
+  </action>
+  <action name="actionSave_gen_image">
+   <property name="text">
+    <string>Save gen  image</string>
+   </property>
+  </action>
+  <action name="actionSave_scribble">
+   <property name="text">
+    <string>Save scribble</string>
+   </property>
+  </action>
+  <action name="actionAdd_ColorModel">
+   <property name="text">
+    <string>Add ColorModel</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="images/images.qrc"/>

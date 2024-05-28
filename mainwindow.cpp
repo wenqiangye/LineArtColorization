@@ -12,24 +12,22 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
     ui->listView->setIconSize(QSize(256, 256));
     ui->lineartwidget->setStyleSheet(QString::fromUtf8("#lineartwidget{border:2px solid white}"));
     if(pRef_based_model.get() == nullptr)
     {
         pRef_based_model = std::make_unique<COLORMODEL::ColorModel>();
     }
+
+    connect(ui->actionAdd_LineArt, SIGNAL(triggered()), this, SLOT(on_add_line_art_pushButton_clicked()));
+    connect(ui->actionAdd_reference, SIGNAL(triggered()), this, SLOT(on_add_ref_pushButton_clicked()));
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-
-// void MainWindow::on_pushButton_clicked()
-// {
-
-// }
-
 
 void MainWindow::on_add_line_art_pushButton_clicked()
 {
