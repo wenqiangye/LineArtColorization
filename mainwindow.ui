@@ -20,7 +20,7 @@
    <string>MainWindow</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="images/images.qrc">
+   <iconset resource="../images/images.qrc">
     <normaloff>:/img/icon/icon.png</normaloff>:/img/icon/icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -84,7 +84,7 @@
          <enum>Qt::RichText</enum>
         </property>
         <property name="pixmap">
-         <pixmap resource="images/images.qrc">:/img/example/sketch.png</pixmap>
+         <pixmap resource="../images/images.qrc">:/img/example/sketch.png</pixmap>
         </property>
         <property name="scaledContents">
          <bool>false</bool>
@@ -128,7 +128,7 @@
          <enum>Qt::RichText</enum>
         </property>
         <property name="pixmap">
-         <pixmap resource="images/images.qrc">:/img/example/sketch.png</pixmap>
+         <pixmap resource="../images/images.qrc">:/img/example/sketch.png</pixmap>
         </property>
         <property name="scaledContents">
          <bool>false</bool>
@@ -295,7 +295,7 @@
   </action>
  </widget>
  <resources>
-  <include location="images/images.qrc"/>
+  <include location="../images/images.qrc"/>
  </resources>
  <connections/>
 </ui>

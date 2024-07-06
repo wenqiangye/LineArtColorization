@@ -4,7 +4,7 @@
  * Copyright (c) 2024 by yesky email: a316606581@gmail.com, All Rights Reserved.
  */
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
+#include "ui_mainwindow.h"
 #include "Loger.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -30,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->add_ref_pushButton, SIGNAL(clicked()), this, SLOT(onAddRefPushButtonClicked()));
     connect(ui->add_scrible_pushButton, SIGNAL(clicked()), this, SLOT(onAddScriblePushButtonClicked()));
     connect(ui->gen_image_pushButton, SIGNAL(clicked()), this, SLOT(onGenImagePushButtonClicked()));
+    connect(ui->scrible_label, SIGNAL(clicked()), this, SLOT(onOpenScribbleWindowClicked()));
 }
 
 MainWindow::~MainWindow()
@@ -130,6 +131,11 @@ void MainWindow::onSaveGenImageClicked()
             qWarning("Failed to save gen image.");
         }
     }
+}
+
+void MainWindow::onOpenScribbleWindowClicked()
+{
+    LOG_INFO(LOG_BASE::LOG_LEVEL_INFO, "open scribble window")
 }
 
 

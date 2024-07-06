@@ -18,12 +18,13 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/dnn.hpp>
+#include <ui_mainwindow.h>
 
-QT_BEGIN_NAMESPACE
-namespace Ui
-{
-    class MainWindow;
-}
+// QT_BEGIN_NAMESPACE
+// namespace Ui
+// {
+//     class MainWindow;
+// }
 QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
@@ -47,8 +48,11 @@ private slots:
 
     void onSaveGenImageClicked();
 
+    void onOpenScribbleWindowClicked();
+
 private:
-    Ui::MainWindow *ui;
+    // Ui::MainWindow *ui;
+    Ui_MainWindow *ui;
     std::unique_ptr<QStandardItemModel> pRefImageModel;
     std::vector<QImage> refImages;
     std::unique_ptr<COLORMODEL::ColorModel> pRefBasedModel;

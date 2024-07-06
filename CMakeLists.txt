@@ -14,6 +14,8 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets LinguistTools)
 
 set(TS_FILES MultiGuideLineArtColorization_zh_CN.ts)
 
+# 添加 include 目录
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -22,20 +24,21 @@ set(PROJECT_SOURCES
         mainwindow.ui
         ${TS_FILES}
 )
-
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(MultiGuideLineArtColorization
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        ColorModel.h
-        ModelBase.h
-        ScribbleColorModel.h
-        Loger.h
-        Loger.cpp
+        include/ColorModel.h
+        include/ModelBase.h
+        include/ScribbleColorModel.h
+        include/Loger.h
+        src/Loger.cpp
         images/images.qrc
-        ColorModel.cpp
-        MatProcess.h
-        MatProcess.cpp
+        src/ColorModel.cpp
+        include/MatProcess.h
+        src/MatProcess.cpp
+        include/ui_mainwindow.h
+        include/DoubleClickeableLabel.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET MultiGuideLineArtColorization APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
