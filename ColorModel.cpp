@@ -4,7 +4,7 @@
  * Copyright (c) 2024 by yesky email: a316606581@gmail.com, All Rights Reserved.
  */
 
-#include "colormodel.h"
+#include "ColorModel.h"
 #include "MatProcess.h"
 
 void COLORMODEL::ColorModel::getImgTensors(const QImage &img, std::vector<float> &tensor_values, const int &channel_cnt)
@@ -52,10 +52,13 @@ void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &
     // Ort::Value input_ref_tensor = ;
 
     std::vector<Ort::Value> inputs_tensors;
-    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, sketch_tensors.data(), sketch_tensors.size(), input_sketch_shape.data(), input_sketch_shape.size()));
+    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, sketch_tensors.data(),
+                             sketch_tensors.size(), input_sketch_shape_.data(), input_sketch_shape_.size()));
     memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, ref_tensors.data(), ref_tensors.size(), input_ref_shape.data(), input_ref_shape.size()));
-    auto output_tensors = session_->Run(Ort::RunOptions{nullptr}, input_node_names, inputs_tensors.data(), inputs_tensors.size(), output_node_names, 1);
+    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, ref_tensors.data(),
+                             ref_tensors.size(), input_ref_shape_.data(), input_ref_shape_.size()));
+    auto output_tensors = session_->Run(Ort::RunOptions{nullptr}, input_node_names, inputs_tensors.data(),
+                                        inputs_tensors.size(), output_node_names, 1);
 
     std::vector<int64_t>  output_shape = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
     int batch_size = output_shape[0];
@@ -82,7 +85,8 @@ void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &
     OpenCVMat_Process::MatToQImage(output_image, gen_image);
 }
 
-void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &ref_image, QImage &gen_image, cv::Mat &sketch_image_mat, cv::Mat &current_ref_image_mat)
+void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &ref_image,
+                                      QImage &gen_image, cv::Mat &sketch_image_mat, cv::Mat &current_ref_image_mat)
 {
     std::cout << "run mat model" << std::endl;
     if(sketch_image.isNull() || sketch_image_mat.empty())
@@ -108,10 +112,13 @@ void COLORMODEL::ColorModel::RunModel(const QImage &sketch_image, const QImage &
     Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 
     std::vector<Ort::Value> inputs_tensors;
-    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, sketch_tensors.data(), sketch_tensors.size(), input_sketch_shape.data(), input_sketch_shape.size()));
+    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, sketch_tensors.data(),
+                             sketch_tensors.size(), input_sketch_shape_.data(), input_sketch_shape_.size()));
     memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, ref_tensors.data(), ref_tensors.size(), input_ref_shape.data(), input_ref_shape.size()));
-    auto output_tensors = session_->Run(Ort::RunOptions{nullptr}, input_node_names, inputs_tensors.data(), inputs_tensors.size(), output_node_names, 1);
+    inputs_tensors.push_back(Ort::Value::CreateTensor<float>(memory_info, ref_tensors.data(),
+                             ref_tensors.size(), input_ref_shape_.data(), input_ref_shape_.size()));
+    auto output_tensors = session_->Run(Ort::RunOptions{nullptr}, input_node_names,
+                                        inputs_tensors.data(), inputs_tensors.size(), output_node_names, 1);
 
     std::vector<int64_t>  output_shape = output_tensors[0].GetTensorTypeAndShapeInfo().GetShape();
     int batch_size = output_shape[0];

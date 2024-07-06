@@ -6,7 +6,7 @@
 #ifndef COLORMODEL_H
 #define COLORMODEL_H
 
-#include "modelbase.h"
+#include "ModelBase.h"
 #include "Loger.h"
 #include <onnxruntime_cxx_api.h>
 #include <onnxruntime_c_api.h>
@@ -28,13 +28,13 @@
 using namespace Ort;
 namespace COLORMODEL
 {
-    class ColorModel
+    class ColorModel: public ModelBase
     {
     public:
-        explicit ColorModel(const std::string  &model_path) : model_path_(model_path)
-        {
-            Initialize();
-        }
+        // explicit ColorModel(const std::string  &model_path) : model_path_(model_path)
+        // {
+        //     Initialize();
+        // }
         ColorModel()
         {
             Initialize();
@@ -44,7 +44,7 @@ namespace COLORMODEL
             delete session_;
         }
         void getImgTensors(const QImage &img, std::vector<float> &tensor_values, const int &channels_cnt );
-        void Initialize()
+        virtual void Initialize() override
         {
             env_ = Ort::Env(ORT_LOGGING_LEVEL_WARNING, "ColorModel");
             session_ = new Ort::Session(env_, model_path_.c_str(), session_options_);
@@ -68,11 +68,11 @@ namespace COLORMODEL
                     std::cout << input_shape[j] << " ";
                     if(i == 0)
                     {
-                        input_sketch_shape.push_back(input_shape[j]);
+                        input_sketch_shape_.push_back(input_shape[j]);
                     }
                     else
                     {
-                        input_ref_shape.push_back(input_shape[j]);
+                        input_ref_shape_.push_back(input_shape[j]);
                     }
                 }
                 std::cout << std::endl;
@@ -89,34 +89,35 @@ namespace COLORMODEL
                     std::cout << output_shape[j] << " ";
                     if(i == 0)
                     {
-                        output_ref_shape.push_back(output_shape[j]);
+                        output_ref_shape_.push_back(output_shape[j]);
                     }
                     else
                     {
-                        output_sketch_shape.push_back(output_shape[j]);
+                        output_sketch_shape_.push_back(output_shape[j]);
                     }
                 }
                 std::cout << std::endl;
             }
         }
-        void RunModel(const QImage &sketch_image, const QImage &ref_image, QImage &gen_image);
-        void RunModel(const QImage &sketch_image, const QImage &ref_image, QImage &gen_image, cv::Mat &sketch_image_mat, cv::Mat &current_ref_image_mat);
+        virtual void RunModel(const QImage &sketch_image, const QImage &ref_image, QImage &gen_image) override;
+        virtual void RunModel(const QImage &sketch_image, const QImage &ref_image, QImage &gen_image,
+                              cv::Mat &sketch_image_mat, cv::Mat &current_ref_image_mat) override;
         // void MatToQImage(const cv::Mat &mat, QImage &gen_image);
         void GetMatTensor(const cv::Mat &img, std::vector<float> &tensor_values, const int &channel_cnt);
     private:
-        std::string model_name = "reference_based.onnx";
+        std::string model_name_ = "reference_based.onnx";
         std::string model_path_ = "/home/yesky/PycharmProjects/MultiGuideLineArtColorization/modelonnx/MY_GEN.onnx";
         Ort::SessionOptions session_options_;
         Ort::Env  env_;
         Ort::Session *session_;
 
-        std::vector<int64_t> input_sketch_shape;
-        std::vector<int64_t> input_ref_shape;
+        std::vector<int64_t> input_sketch_shape_;
+        std::vector<int64_t> input_ref_shape_;
 
-        std::vector<int64_t> output_sketch_shape;
-        std::vector<int64_t> output_ref_shape;
-        cv::Mat mat_sketch_image;
-        cv::Mat mat_ref_image;
+        std::vector<int64_t> output_sketch_shape_;
+        std::vector<int64_t> output_ref_shape_;
+        cv::Mat mat_sketch_image_;
+        cv::Mat mat_ref_image_;
     };
 }
 #endif // COLORMODEL_H

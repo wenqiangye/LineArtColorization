@@ -27,13 +27,13 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(MultiGuideLineArtColorization
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        colormodel.h
-        modelbase.h
-        scriblecolormodel.h
+        ColorModel.h
+        ModelBase.h
+        ScribbleColorModel.h
         Loger.h
         Loger.cpp
         images/images.qrc
-        colormodel.cpp
+        ColorModel.cpp
         MatProcess.h
         MatProcess.cpp
     )

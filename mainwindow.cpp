@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->actionAdd_Scribble, SIGNAL(triggered()), this, SLOT(onAddScriblePushButtonClicked()));
     connect(ui->actionSave_gen_image, SIGNAL(triggered()), this, SLOT(onSaveGenImageClicked()));
 
+
     connect(ui->add_line_art_pushButton, SIGNAL(clicked()), this, SLOT(onAddLineArtPushButtonClicked()));
     connect(ui->add_ref_pushButton, SIGNAL(clicked()), this, SLOT(onAddRefPushButtonClicked()));
     connect(ui->add_scrible_pushButton, SIGNAL(clicked()), this, SLOT(onAddScriblePushButtonClicked()));

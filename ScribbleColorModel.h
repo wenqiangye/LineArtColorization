@@ -3,10 +3,10 @@
  * @LastEditors: yesky a316606581@gmail.com
  * Copyright (c) 2024 by yesky email: a316606581@gmail.com, All Rights Reserved.
  */
-#ifndef SCRIBLECOLORMODEL_H
-#define SCRIBLECOLORMODEL_H
+#ifndef SCRIBBLECOLORMODEL_H
+#define SCRIBBLECOLORMODEL_H
 
-#include "modelbase.h"
+#include "ModelBase.h"
 #include <string>
 
 
@@ -22,4 +22,4 @@ private:
 };
 }
 
-#endif // SCRIBLECOLORMODEL_H
+#endif // SCRIBBLECOLORMODEL_H
